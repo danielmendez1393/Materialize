@@ -2972,7 +2972,7 @@ $(document).ready(function(){
       $select.before($newSelect);
       $newSelect.before(dropdownIcon);
 
-      $newSelect.after(options);
+      $body.append(options);
       // Check if section element is disabled
       if (!$select.is(':disabled')) {
         $newSelect.dropdown({'hover': false, 'closeOnClick': false});
