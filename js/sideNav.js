@@ -215,72 +215,61 @@
           }).bind('panend', function(e) {
 
             if (e.gesture.pointerType == "touch") {
+              var menuShouldBeOpen, menuShouldBeClosed,
+                  dragTargetCSSOpen, dragTargetCSSClosed,
+                  returnPos, adjustedMenuWidth;
               var $overlay = $('<div id="sidenav-overlay"></div>');
               var velocityX = e.gesture.velocityX;
               var x = e.gesture.center.x;
               var leftPos = x - options.menuWidth;
               var rightPos = x - options.menuWidth / 2;
-              if (leftPos > 0 ) {
-                leftPos = 0;
-              }
-              if (rightPos < 0) {
-                rightPos = 0;
-              }
+              leftPos = Math.min(0, leftPos);
+              rightPos = Math.max(0, rightPos);
               panning = false;
 
+              // Initialize variables for different options.
               if (options.edge === 'left') {
-                // If velocityX <= 0.3 then the user is flinging the menu closed so ignore menuOut
-                if ((menuOut && velocityX <= 0.3) || velocityX < -0.5) {
-                  // Return menu to open
-                  if (leftPos !== 0) {
-                    menu_id.velocity({'translateX': [0, leftPos]}, {duration: 300, queue: false, easing: 'easeOutQuad'});
-                  }
+                menuShouldBeOpen = (menuOut && velocityX <= 0.3) || velocityX < -0.5;
+                menuShouldBeClosed = !menuOut || velocityX > 0.3;
+                dragTargetCSSOpen = {width: '50%', right: 0, left: ''};
+                dragTargetCSSClosed = {width: '10px', right: '', left: 0};
+                returnPos = leftPos;
+                adjustedMenuWidth = -1 * options.menuWidth - 10;
 
-                  $overlay.velocity({opacity: 1 }, {duration: 50, queue: false, easing: 'easeOutQuad'});
-                  $dragTarget.css({width: '50%', right: 0, left: ''});
-                  menuOut = true;
-                }
-                else if (!menuOut || velocityX > 0.3) {
-                  // Enable Scrolling
-                  $('body').css({
-                    overflow: '',
-                    width: ''
-                  });
-                  // Slide menu closed
-                  menu_id.velocity({'translateX': [-1 * options.menuWidth - 10, leftPos]}, {duration: 200, queue: false, easing: 'easeOutQuad'});
-                  $overlay.velocity({opacity: 0 }, {duration: 200, queue: false, easing: 'easeOutQuad',
-                    complete: function () {
-                      $(this).remove();
-                    }});
-                  $dragTarget.css({width: '10px', right: '', left: 0});
-                }
+              } else {
+                menuShouldBeOpen = (menuOut && velocityX >= -0.3) || velocityX > 0.5;
+                menuShouldBeClosed = !menuOut || velocityX < -0.3;
+                dragTargetCSSOpen = {width: '50%', right: '', left: 0};
+                dragTargetCSSClosed = {width: '10px', right: 0, left: ''};
+                returnPos = rightPos;
+                adjustedMenuWidth = options.menuWidth + 10;
               }
-              else {
-                if ((menuOut && velocityX >= -0.3) || velocityX > 0.5) {
-                  // Return menu to open
-                  if (rightPos !== 0) {
-                    menu_id.velocity({'translateX': [0, rightPos]}, {duration: 300, queue: false, easing: 'easeOutQuad'});
-                  }
 
-                  $overlay.velocity({opacity: 1 }, {duration: 50, queue: false, easing: 'easeOutQuad'});
-                  $dragTarget.css({width: '50%', right: '', left: 0});
-                  menuOut = true;
+              // If velocityX <= 0.3 then the user is flinging the menu closed so ignore menuOut
+              if (menuShouldBeOpen) {
+                // Return menu to open
+                if (returnPos !== 0) {
+                  menu_id.velocity({'translateX': [0, returnPos]}, {duration: 300, queue: false, easing: 'easeOutQuad'});
                 }
-                else if (!menuOut || velocityX < -0.3) {
-                  // Enable Scrolling
-                  $('body').css({
-                    overflow: '',
-                    width: ''
-                  });
 
-                  // Slide menu closed
-                  menu_id.velocity({'translateX': [options.menuWidth + 10, rightPos]}, {duration: 200, queue: false, easing: 'easeOutQuad'});
-                  $overlay.velocity({opacity: 0 }, {duration: 200, queue: false, easing: 'easeOutQuad',
-                    complete: function () {
-                      $(this).remove();
-                    }});
-                  $dragTarget.css({width: '10px', right: 0, left: ''});
-                }
+                $overlay.velocity({opacity: 1 }, {duration: 50, queue: false, easing: 'easeOutQuad'});
+                $dragTarget.css(dragTargetCSSOpen);
+                menuOut = true;
+
+              } else if (menuShouldBeClosed) {
+                // Enable Scrolling
+                $('body').css({
+                  overflow: '',
+                  width: ''
+                });
+                // Slide menu closed
+                menu_id.velocity({'translateX': [adjustedMenuWidth, returnPos]}, {duration: 200, queue: false, easing: 'easeOutQuad'});
+                $overlay.velocity({opacity: 0 }, {duration: 200, queue: false, easing: 'easeOutQuad',
+                  complete: function () {
+                    $(this).remove();
+                  }});
+                $dragTarget.css(dragTargetCSSClosed);
+                menuOut = false;
               }
 
             }
