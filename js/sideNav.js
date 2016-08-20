@@ -13,6 +13,7 @@
       $(this).each(function(){
         var $this = $(this);
         var menu_id = $("#"+ $this.attr('data-activates'));
+        var menuId = $this.attr('data-activates');
 
         // Set to width
         if (options.menuWidth != 300) {
@@ -129,6 +130,16 @@
           }
         };
 
+        var disableOtherDragTargets = function() {
+          var $otherDragTargets = $('.drag-target').not('[data-sidenav="' + $this.attr('data-activates') + '"]');
+          $otherDragTargets.hide();
+        };
+
+        var enableOtherDragTargets = function() {
+          var $otherDragTargets = $('.drag-target').not('[data-sidenav="' + $this.attr('data-activates') + '"]');
+          $otherDragTargets.show();
+        };
+
 
 
         // Touch Event
@@ -169,13 +180,12 @@
                 $('body').append($overlay);
               }
 
-              // Keep within boundaries
-              if (options.edge === 'left') {
-                if (x > options.menuWidth) { x = options.menuWidth; }
-                else if (x < 0) { x = 0; }
-              }
 
               if (options.edge === 'left') {
+                // Keep within boundaries
+                if (x > options.menuWidth) { x = options.menuWidth; }
+                else if (x < 0) { x = 0; }
+
                 // Left Direction
                 if (x < (options.menuWidth / 2)) { menuOut = false; }
                 // Right Direction
@@ -189,12 +199,13 @@
                 }
                 // Right Direction
                 else if (x >= (window.innerWidth - options.menuWidth / 2)) {
-                 menuOut = false;
-               }
-                var rightPos = (x - options.menuWidth / 2);
+                  menuOut = false;
+                }
+                var rightPos = x - (window.innerWidth - options.menuWidth);
                 if (rightPos < 0) {
                   rightPos = 0;
                 }
+                console.log(x, options.menuWidth, rightPos);
 
                 menu_id.css('transform', 'translateX(' + rightPos + 'px)');
               }
@@ -218,11 +229,11 @@
               var menuShouldBeOpen, menuShouldBeClosed,
                   dragTargetCSSOpen, dragTargetCSSClosed,
                   returnPos, adjustedMenuWidth;
-              var $overlay = $('<div id="sidenav-overlay"></div>');
+              var $overlay = $('#sidenav-overlay');
               var velocityX = e.gesture.velocityX;
               var x = e.gesture.center.x;
               var leftPos = x - options.menuWidth;
-              var rightPos = x - options.menuWidth / 2;
+              var rightPos = x - (window.innerWidth - options.menuWidth);
               leftPos = Math.min(0, leftPos);
               rightPos = Math.max(0, rightPos);
               panning = false;
@@ -247,6 +258,7 @@
 
               // If velocityX <= 0.3 then the user is flinging the menu closed so ignore menuOut
               if (menuShouldBeOpen) {
+                console.log("MENU SHOULD BE OPEN");
                 // Return menu to open
                 if (returnPos !== 0) {
                   menu_id.velocity({'translateX': [0, returnPos]}, {duration: 300, queue: false, easing: 'easeOutQuad'});
@@ -255,8 +267,11 @@
                 $overlay.velocity({opacity: 1 }, {duration: 50, queue: false, easing: 'easeOutQuad'});
                 $dragTarget.css(dragTargetCSSOpen);
                 menuOut = true;
+                disableOtherDragTargets();
 
               } else if (menuShouldBeClosed) {
+                console.log("MENU SHOULD BE CLOSED");
+
                 // Enable Scrolling
                 $('body').css({
                   overflow: '',
@@ -270,6 +285,7 @@
                   }});
                 $dragTarget.css(dragTargetCSSClosed);
                 menuOut = false;
+                enableOtherDragTargets();
               }
 
             }
@@ -281,6 +297,7 @@
             menuOut = false;
             panning = false;
             removeMenu();
+            enableOtherDragTargets();
           }
           else {
 
@@ -308,6 +325,7 @@
               menuOut = false;
               panning = false;
               removeMenu();
+              enableOtherDragTargets();
               $overlay.velocity({opacity: 0}, {duration: 300, queue: false, easing: 'easeOutQuad',
                 complete: function() {
                   $(this).remove();
@@ -319,6 +337,7 @@
               complete: function () {
                 menuOut = true;
                 panning = false;
+                disableOtherDragTargets();
               }
             });
           }
